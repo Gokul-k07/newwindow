@@ -1,0 +1,62 @@
+# Compiled files
+*.o
+*.so
+*.class
+*.pyc
+*.pyo
+__pycache__/
+
+# Android
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+android/*.iml
+android/.externalNativeBuild
+android/.cxx
+android/captures/
+android/app/google-services.json
+
+# Firebase
+firebase/functions/lib/
+firebase/functions/node_modules/
+firebase/.firebase/
+firebase/firebase-debug.log
+firebase/firestore-debug.log
+firebase/ui-debug.log
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+
+# IDE
+.vscode/
+.DS_Store
+.idea/
+*.swp
+*.swo
+*~
+
+# Secrets and keys
+*.jks
+*.keystore
+google-services.json
+GoogleService-Info.plist
+.env
+.env.local
+secrets.json
+
+# Logs
+*.log
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Build artifacts
+dist/
+out/
+target/

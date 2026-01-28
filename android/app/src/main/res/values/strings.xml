@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SecurePower</string>
+
+    <!-- Authentication -->
+    <string name="auth_enter_pin">Enter PIN</string>
+    <string name="auth_enter_password">Enter Password</string>
+    <string name="auth_verify">Verify</string>
+    <string name="auth_cancel">Cancel</string>
+    <string name="auth_failed">Authentication failed</string>
+    <string name="auth_locked_out">Too many failed attempts. Locked out for %1$d seconds</string>
+    <string name="auth_threshold_warning">Warning: One more failure will trigger security alert</string>
+
+    <!-- Home Screen -->
+    <string name="home_protection_enabled">Power-Off Protection: Enabled</string>
+    <string name="home_protection_disabled">Power-Off Protection: Disabled</string>
+    <string name="home_last_location">Last Location: %1$s</string>
+    <string name="home_battery_level">Battery: %1$d%%</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_authentication">Authentication</string>
+    <string name="settings_change_pin">Change PIN</string>
+    <string name="settings_change_password">Change Password</string>
+    <string name="settings_enable_biometric">Enable Biometric</string>
+    <string name="settings_security_options">Security Options</string>
+    <string name="settings_enable_alarm">Enable Alarm</string>
+    <string name="settings_auto_enable_internet">Auto-Enable Internet</string>
+    <string name="settings_auto_enable_location">Auto-Enable Location</string>
+    <string name="settings_fake_poweroff">Fake Power-Off Screen</string>
+    <string name="settings_sim_alert">SIM Change Alert</string>
+
+    <!-- Notifications -->
+    <string name="notification_location_tracking_title">Location Tracking Active</string>
+    <string name="notification_location_tracking_text">SecurePower is tracking your device</string>
+    <string name="notification_security_alert_title">Security Alert</string>
+    <string name="notification_security_alert_text">Unauthorized access attempt detected</string>
+
+    <!-- Permissions -->
+    <string name="permission_location_rationale">Location permission is required for device tracking during security alerts</string>
+    <string name="permission_phone_rationale">Phone state permission is required to detect SIM card changes</string>
+    <string name="permission_accessibility_rationale">Accessibility permission is required to detect power button press</string>
+
+    <!-- Errors -->
+    <string name="error_generic">An error occurred. Please try again.</string>
+    <string name="error_no_internet">No internet connection</string>
+    <string name="error_authentication_failed">Authentication failed</string>
+</resources>
