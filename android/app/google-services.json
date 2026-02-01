@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "970921552887",
+    "firebase_url": "https://power-test-857bb-default-rtdb.firebaseio.com",
+    "project_id": "power-test-857bb",
+    "storage_bucket": "power-test-857bb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:970921552887:android:4be5b5973a8a8c61cf1cf2",
+        "android_client_info": {
+          "package_name": "com.antitheft.securepower"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBX0nP617njMof8UssKPoxhHxncQ9LusUI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
