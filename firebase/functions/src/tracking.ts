@@ -1,5 +1,7 @@
 import * as admin from "firebase-admin";
-import {DataSnapshot} from "firebase-functions/v1/database";
+import {database} from "firebase-functions/v1";
+
+type DataSnapshot = database.DataSnapshot;
 
 interface LocationData {
   lat: number;

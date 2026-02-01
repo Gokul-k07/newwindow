@@ -1,7 +1,8 @@
 import * as admin from "firebase-admin";
-import {DataSnapshot} from "firebase-functions/v1/database";
-import {sendSecurityEmail} from "./email";
-import {sendSecuritySMS} from "./sms";
+import {database} from "firebase-functions/v1";
+import {sendWhatsAppAlert} from "./sms";
+
+type DataSnapshot = database.DataSnapshot;
 
 interface AlertData {
   deviceId: string;
@@ -78,27 +79,16 @@ export const processSecurityAlert = async (snapshot: DataSnapshot): Promise<void
       await snapshot.ref.update({sessionId});
     }
 
-    // Send email notification
-    try {
-      if (userData.settings?.emailNotifications !== false) {
-        await sendSecurityEmail(alertId, {...alertData, sessionId});
-      }
-    } catch (emailError) {
-      console.error("Failed to send email:", emailError);
-      // Continue processing even if email fails
-    }
+    // Send WhatsApp notification (based on alert type and user settings)
+    const criticalAlerts = ["UNAUTHORIZED_POWEROFF", "SIM_CHANGED", "FAILED_AUTH_THRESHOLD"];
+    const shouldSendWhatsApp = criticalAlerts.includes(alertData.type);
 
-    // Send SMS notification (based on alert type and user settings)
-    const shouldSendSMS = alertData.type === "UNAUTHORIZED_POWEROFF" ||
-                         alertData.type === "SIM_CHANGED" ||
-                         alertData.type === "FAILED_AUTH_THRESHOLD";
-
-    if (shouldSendSMS && userData.settings?.smsNotifications !== false) {
+    if (shouldSendWhatsApp && userData.settings?.whatsappNotifications !== false) {
       try {
-        await sendSecuritySMS(alertId, {...alertData, sessionId});
-      } catch (smsError) {
-        console.error("Failed to send SMS:", smsError);
-        // Continue processing even if SMS fails
+        await sendWhatsAppAlert(alertId, {...alertData, sessionId});
+      } catch (whatsappError) {
+        console.error("Failed to send WhatsApp:", whatsappError);
+        // Continue processing even if WhatsApp fails
       }
     }
 
