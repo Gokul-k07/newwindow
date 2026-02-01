@@ -4,7 +4,6 @@ import * as admin from "firebase-admin";
 admin.initializeApp();
 
 // Import function modules
-import {sendSecurityEmail} from "./email";
 import {sendSecuritySMS} from "./sms";
 import {processSecurityAlert} from "./alerts";
 import {processLocationUpdate} from "./tracking";
@@ -18,5 +17,4 @@ export const onLocationUpdate = functions.database
   .ref("/tracking/{sessionId}/locations/{timestamp}")
   .onCreate(processLocationUpdate);
 
-export const emailAlert = sendSecurityEmail;
 export const smsAlert = sendSecuritySMS;
