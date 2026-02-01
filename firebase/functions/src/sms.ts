@@ -1,15 +1,14 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import * as twilio from "twilio";
+import {Twilio} from "twilio";
 
 // Initialize Twilio
 const TWILIO_SID = functions.config().twilio?.sid || "";
 const TWILIO_TOKEN = functions.config().twilio?.token || "";
-const TWILIO_PHONE = functions.config().twilio?.phone || "";
 
-let twilioClient: twilio.Twilio | null = null;
+let twilioClient: Twilio | null = null;
 if (TWILIO_SID && TWILIO_TOKEN) {
-  twilioClient = twilio(TWILIO_SID, TWILIO_TOKEN);
+  twilioClient = new Twilio(TWILIO_SID, TWILIO_TOKEN);
 }
 
 interface AlertData {
@@ -26,35 +25,35 @@ interface AlertData {
 }
 
 /**
- * Send SMS alert to trusted contact
+ * Send WhatsApp alert to trusted contact
  */
-export const sendSecuritySMS = async (alertId: string, alertData: AlertData): Promise<void> => {
+export const sendWhatsAppAlert = async (alertId: string, alertData: AlertData): Promise<void> => {
   try {
     if (!twilioClient) {
       console.error("Twilio not configured");
       return;
     }
 
-    // Get user data to retrieve trusted number
+    // Get user data to retrieve trusted WhatsApp number
     const userSnapshot = await admin.database()
       .ref(`/users/${alertData.userId}`)
       .once("value");
 
     const userData = userSnapshot.val();
-    if (!userData || !userData.trustedNumber) {
-      console.error("No trusted number configured for user:", alertData.userId);
+    if (!userData || !userData.trustedWhatsAppNumber) {
+      console.error("No trusted WhatsApp number configured for user:", alertData.userId);
       return;
     }
 
-    // Check rate limiting (max 1 SMS per 5 minutes)
-    if (userData.lastSMS && (Date.now() - userData.lastSMS) < 5 * 60 * 1000) {
-      console.log("SMS rate limit: Skipping (sent within last 5 minutes)");
+    // Check rate limiting (max 1 WhatsApp message per 5 minutes)
+    if (userData.lastWhatsApp && (Date.now() - userData.lastWhatsApp) < 5 * 60 * 1000) {
+      console.log("WhatsApp rate limit: Skipping (sent within last 5 minutes)");
       await admin.database()
         .ref(`/alerts/${alertId}`)
         .update({
-          smsSent: false,
-          smsSkipped: true,
-          smsSkipReason: "rate_limit",
+          whatsappSent: false,
+          whatsappSkipped: true,
+          whatsappSkipReason: "rate_limit",
         });
       return;
     }
@@ -67,64 +66,97 @@ export const sendSecuritySMS = async (alertId: string, alertData: AlertData): Pr
     const deviceData = deviceSnapshot.val();
 
     // Determine alert type
-    const alertTypeShort: Record<string, string> = {
-      "UNAUTHORIZED_POWEROFF": "Unauthorized power-off attempt",
-      "SIM_CHANGED": "SIM card changed",
-      "FAILED_AUTH_THRESHOLD": "3 failed login attempts",
-      "APP_UNINSTALL_ATTEMPT": "App uninstall attempt",
-      "DEVICE_ADMIN_REMOVED": "Device admin removed",
+    const alertTypeMessages: Record<string, string> = {
+      "UNAUTHORIZED_POWEROFF": "UNAUTHORIZED POWER-OFF ATTEMPT",
+      "SIM_CHANGED": "SIM CARD CHANGED",
+      "FAILED_AUTH_THRESHOLD": "MULTIPLE FAILED LOGIN ATTEMPTS",
+      "APP_UNINSTALL_ATTEMPT": "APP UNINSTALL ATTEMPT",
+      "DEVICE_ADMIN_REMOVED": "DEVICE ADMIN REMOVED",
     };
 
-    const alertMsg = alertTypeShort[alertData.type] || "Security alert";
+    const alertType = alertTypeMessages[alertData.type] || "SECURITY ALERT";
 
     // Format location
     const locationText = alertData.location?.address ||
-      (alertData.location ? `${alertData.location.lat.toFixed(4)}, ${alertData.location.lng.toFixed(4)}` : "Unknown");
+      (alertData.location ? `${alertData.location.lat.toFixed(6)}, ${alertData.location.lng.toFixed(6)}` : "Location unavailable");
 
-    // Generate short tracking link (would use URL shortener in production)
+    // Generate Google Maps link
+    const mapsLink = alertData.location ?
+      `https://www.google.com/maps?q=${alertData.location.lat},${alertData.location.lng}` :
+      null;
+
+    // Generate tracking link
     const trackingLink = alertData.sessionId ?
-      `https://securepower.app/t/${alertData.sessionId.substring(0, 8)}` :
-      "https://securepower.app";
+      `https://securepower-antitheft.web.app/track/${alertData.sessionId}` :
+      "https://securepower-antitheft.web.app";
 
-    // Build SMS message (160 char limit for single SMS)
-    const smsMessage = `SecurePower Alert: ${alertMsg} on ${deviceData?.deviceName || "your device"}. Location: ${locationText}. Track: ${trackingLink}`;
-
-    // Send SMS
-    const message = await twilioClient.messages.create({
-      body: smsMessage,
-      from: TWILIO_PHONE,
-      to: userData.trustedNumber,
+    // Format timestamp
+    const date = new Date(alertData.timestamp);
+    const timeString = date.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      timeZoneName: "short",
     });
 
-    console.log(`SMS sent: ${message.sid}`);
+    // Build WhatsApp message with formatting
+    const whatsappMessage = `🚨 *SECURITY ALERT*
 
-    // Update alert record and user's last SMS timestamp
+*Type:* ${alertType}
+*Device:* ${deviceData?.deviceName || "Unknown Device"}
+*Time:* ${timeString}
+
+📍 *Location:*
+${locationText}
+${mapsLink ? `\n🗺️ View on map: ${mapsLink}` : ""}
+
+🔗 Track device: ${trackingLink}
+
+---
+SecurePower Anti-Theft Alert`;
+
+    // Send WhatsApp message (using Twilio Sandbox for testing)
+    const message = await twilioClient.messages.create({
+      body: whatsappMessage,
+      from: "whatsapp:+14155238886", // Twilio WhatsApp Sandbox number
+      to: `whatsapp:${userData.trustedWhatsAppNumber}`,
+    });
+
+    console.log(`WhatsApp sent: ${message.sid}`);
+
+    // Update alert record and user's last WhatsApp timestamp
     await Promise.all([
       admin.database()
         .ref(`/alerts/${alertId}`)
         .update({
-          smsSent: true,
-          smsSentAt: Date.now(),
-          smsRecipient: userData.trustedNumber,
-          smsId: message.sid,
+          whatsappSent: true,
+          whatsappSentAt: Date.now(),
+          whatsappRecipient: userData.trustedWhatsAppNumber,
+          whatsappId: message.sid,
         }),
       admin.database()
         .ref(`/users/${alertData.userId}`)
         .update({
-          lastSMS: Date.now(),
+          lastWhatsApp: Date.now(),
         }),
     ]);
   } catch (error) {
-    console.error("Error sending SMS:", error);
+    console.error("Error sending WhatsApp message:", error);
 
     // Log failure to alert record
     await admin.database()
       .ref(`/alerts/${alertId}`)
       .update({
-        smsSent: false,
-        smsError: error instanceof Error ? error.message : String(error),
+        whatsappSent: false,
+        whatsappFailed: true,
+        whatsappError: error instanceof Error ? error.message : String(error),
       });
 
     throw error;
   }
 };
+
+// Backward compatibility export
+export const sendSecuritySMS = sendWhatsAppAlert;
